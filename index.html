@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Expense Checker helps users understand and control spending." />
+  <title>Expense Checker | Personal Finance Dashboard</title>
+
+  <!-- Google Fonts: Sora for headings, Inter for body & numbers -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Our stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============================= -->
+  <!-- HEADER -->
+  <!-- ============================= -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-mark">₹</span>
+        <div>
+          <h1>Expense Checker</h1>
+          <p class="brand-sub">Track today. Save tomorrow.</p>
+        </div>
+      </div>
+      <div class="topbar-date" id="todayLabel">--</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ============================= -->
+    <!-- SECTION 1: MONTHLY BUDGET SETUP -->
+    <!-- ============================= -->
+    <section class="card budget-setup">
+      <div class="budget-setup-text">
+        <h2>Monthly Budget</h2>
+        <p class="muted">Set the amount you plan to spend this month. You can update it anytime.</p>
+      </div>
+      <form id="budgetForm" class="budget-form">
+        <div class="field">
+          <label for="budgetInput">Amount (₹)</label>
+          <input type="number" id="budgetInput" min="0" step="1" placeholder="e.g. 15000" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Save Budget</button>
+      </form>
+    </section>
+
+    <!-- ============================= -->
+    <!-- SECTION 2: DASHBOARD SUMMARY CARDS -->
+    <!-- ============================= -->
+    <section class="dashboard-grid">
+
+      <!-- Card: Monthly budget with a progress ring (signature visual) -->
+      <div class="card stat-card">
+        <div class="ring" id="budgetRing">
+          <div class="ring-inner">
+            <span id="ringPercent">0%</span>
+          </div>
+        </div>
+        <div class="stat-text">
+          <span class="stat-label">Monthly Budget</span>
+          <span class="stat-value" id="monthlyBudgetValue">₹0</span>
+        </div>
+      </div>
+
+      <!-- Card: Total spent this month -->
+      <div class="card stat-card">
+        <div class="stat-icon icon-spent">💸</div>
+        <div class="stat-text">
+          <span class="stat-label">Total Spent (This Month)</span>
+          <span class="stat-value" id="totalSpentValue">₹0</span>
+        </div>
+      </div>
+
+      <!-- Card: Remaining budget -->
+      <div class="card stat-card">
+        <div class="stat-icon icon-remaining">🏦</div>
+        <div class="stat-text">
+          <span class="stat-label">Remaining Amount</span>
+          <span class="stat-value" id="remainingValue">₹0</span>
+        </div>
+      </div>
+
+      <!-- Card: Today's expense -->
+      <div class="card stat-card">
+        <div class="stat-icon icon-today">📅</div>
+        <div class="stat-text">
+          <span class="stat-label">Today's Expense</span>
+          <span class="stat-value" id="todaySpentValue">₹0</span>
+          <span class="stat-footnote" id="todayCountValue">0 expenses today</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Status banner: shows "exceeded" or "saved" message -->
+    <div id="statusBanner" class="status-banner" hidden></div>
+
+    <!-- ============================= -->
+    <!-- SECTION 3: ADD EXPENSE FORM -->
+    <!-- ============================= -->
+    <section class="card">
+      <h2>Add an Expense</h2>
+      <form id="expenseForm" class="expense-form">
+
+        <div class="field">
+          <label for="amountInput">Amount (₹)</label>
+          <input type="number" id="amountInput" min="1" step="1" placeholder="e.g. 250" required />
+        </div>
+
+        <div class="field">
+          <label for="categoryInput">Category</label>
+          <select id="categoryInput" required>
+            <option value="Food">🍔 Food</option>
+            <option value="Travel">✈️ Travel</option>
+            <option value="Shopping">🛍️ Shopping</option>
+            <option value="Bills">🧾 Bills</option>
+            <option value="Other">📦 Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="purposeInput">Purpose</label>
+          <input type="text" id="purposeInput" placeholder="e.g. Lunch with team" maxlength="60" />
+        </div>
+
+        <!-- Date & time are captured automatically, shown here for transparency -->
+        <div class="field">
+          <label>Date</label>
+          <input type="text" id="autoDate" disabled />
+        </div>
+
+        <div class="field">
+          <label>Time</label>
+          <input type="text" id="autoTime" disabled />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-add">+ Add Expense</button>
+      </form>
+    </section>
+
+    <!-- ============================= -->
+    <!-- SECTION 4: CHARTS -->
+    <!-- ============================= -->
+    <section class="charts-grid">
+      <div class="card chart-card">
+        <h2>Category-wise Spending</h2>
+        <canvas id="categoryPieChart" height="260"></canvas>
+        <p class="muted small" id="pieEmptyMsg">Add an expense to see the breakdown.</p>
+      </div>
+      <div class="card chart-card">
+        <h2>Daily Spending (This Month)</h2>
+        <canvas id="dailyBarChart" height="260"></canvas>
+        <p class="muted small" id="barEmptyMsg">Add an expense to see the trend.</p>
+      </div>
+    </section>
+
+    <!-- ============================= -->
+    <!-- SECTION 5: EXPENSE HISTORY TABLE -->
+    <!-- ============================= -->
+    <section class="card">
+      <div class="history-header">
+        <h2>Expense History</h2>
+        <button id="clearAllBtn" class="btn btn-danger-outline">Clear All</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Purpose</th>
+              <th>Amount</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="expenseTableBody">
+            <!-- Rows are added here dynamically by script.js -->
+          </tbody>
+        </table>
+        <p class="muted small" id="noExpenseMsg">No expenses added yet. Use the form above to add your first one.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>Built with HTML, CSS & JavaScript — your data stays in your browser (Local Storage).</p>
+  </footer>
+
+  <!-- Chart.js library (for pie & bar charts) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+
+  <!-- Our own JavaScript logic -->
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,474 @@
+/* =========================================================
+   EXPENSE CHECKER — STYLESHEET
+   Organized in sections: variables, base, layout, components,
+   charts, table, status banner, footer, responsive rules.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. COLOR & STYLE VARIABLES
+   Keeping all colors here makes the theme easy to change.
+--------------------------------------------------------- */
+:root {
+  --bg: #F4F7F5;            /* page background */
+  --surface: #FFFFFF;       /* card background */
+  --ink: #122A2C;           /* main text color */
+  --muted: #5C6F70;         /* secondary text color */
+  --border: #E1E8E4;        /* light border lines */
+
+  --primary: #0E7C61;       /* deep emerald (brand color) */
+  --primary-dark: #0A5C47;
+  --primary-light: #E4F2EC;
+
+  --gold: #C99A3E;          /* accent for highlights */
+  --danger: #D64545;        /* exceeded budget / delete */
+  --danger-light: #FBE8E8;
+  --success: #1E9E6D;       /* saved money message */
+  --success-light: #E6F6EE;
+
+  /* Category colors used in the pie chart */
+  --cat-food: #E07A5F;
+  --cat-travel: #3D87B0;
+  --cat-shopping: #C99A3E;
+  --cat-bills: #6B5B95;
+  --cat-other: #5C6F70;
+
+  --radius: 14px;
+  --shadow: 0 2px 10px rgba(18, 42, 44, 0.06);
+}
+
+/* ---------------------------------------------------------
+   2. BASE / RESET
+--------------------------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+h1, h2 {
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+}
+
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+
+/* ---------------------------------------------------------
+   3. HEADER / TOPBAR
+--------------------------------------------------------- */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-mark {
+  font-family: 'Sora', sans-serif;
+  font-weight: 800;
+  font-size: 1.4rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand h1 {
+  font-size: 1.25rem;
+}
+
+.brand-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.topbar-date {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------
+   4. LAYOUT WRAPPER
+--------------------------------------------------------- */
+.wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Generic card used everywhere */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px;
+}
+
+/* ---------------------------------------------------------
+   5. BUDGET SETUP SECTION
+--------------------------------------------------------- */
+.budget-setup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.budget-setup-text h2 { margin-bottom: 4px; }
+
+.budget-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+/* ---------------------------------------------------------
+   6. FORM FIELDS (shared by budget form & expense form)
+--------------------------------------------------------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+input, select {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  min-width: 160px;
+}
+
+input:focus, select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+input:disabled {
+  background: var(--bg);
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------
+   7. BUTTONS
+--------------------------------------------------------- */
+.btn {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.06s ease, opacity 0.15s ease;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover { background: var(--primary-dark); }
+
+.btn-danger-outline {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+.btn-danger-outline:hover {
+  background: var(--danger-light);
+}
+
+.btn-delete {
+  background: transparent;
+  border: none;
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-delete:hover { text-decoration: underline; }
+
+/* ---------------------------------------------------------
+   8. DASHBOARD STAT CARDS
+--------------------------------------------------------- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  background: var(--primary-light);
+  flex-shrink: 0;
+}
+
+.icon-remaining { background: var(--success-light); }
+.icon-today { background: #FBF3E1; }
+
+.stat-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.stat-value {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-footnote {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* --- Signature element: circular budget-used ring --- */
+.ring {
+  --p: 0; /* percent used, set dynamically by script.js */
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: conic-gradient(var(--primary) calc(var(--p) * 1%), var(--border) 0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.ring-inner {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* When budget is exceeded, the ring turns red (class added by JS) */
+.ring.over-budget {
+  background: conic-gradient(var(--danger) calc(var(--p) * 1%), var(--border) 0);
+}
+
+/* ---------------------------------------------------------
+   9. STATUS BANNER (exceeded / saved message)
+--------------------------------------------------------- */
+.status-banner {
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.status-banner.warning {
+  background: var(--danger-light);
+  color: var(--danger);
+  border: 1px solid #F3C9C9;
+}
+
+.status-banner.success {
+  background: var(--success-light);
+  color: var(--success);
+  border: 1px solid #BFE8D5;
+}
+
+/* ---------------------------------------------------------
+   10. EXPENSE FORM
+--------------------------------------------------------- */
+.expense-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.btn-add { height: 42px; }
+
+/* ---------------------------------------------------------
+   11. CHARTS SECTION
+--------------------------------------------------------- */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.chart-card canvas {
+  max-height: 260px;
+}
+
+/* ---------------------------------------------------------
+   12. EXPENSE HISTORY TABLE
+--------------------------------------------------------- */
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.history-header h2 { margin-bottom: 0; }
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+thead th {
+  text-align: left;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+tbody td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+tbody tr:hover { background: var(--bg); }
+
+/* Small colored pill that shows the category next to the purpose text,
+   so the table can have a single "Purpose" column (per the data model)
+   while still showing which category each expense belongs to. */
+.cat-pill {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-right: 8px;
+}
+
+/* ---------------------------------------------------------
+   13. FOOTER
+--------------------------------------------------------- */
+.footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* ---------------------------------------------------------
+   14. RESPONSIVE RULES (tablet & mobile)
+--------------------------------------------------------- */
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .budget-setup {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .budget-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .expense-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  input, select {
+    min-width: 0;
+    width: 100%;
+  }
+  .history-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+}
