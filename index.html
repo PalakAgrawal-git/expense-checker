@@ -39,15 +39,25 @@
     <section class="card budget-setup">
       <div class="budget-setup-text">
         <h2>Monthly Budget</h2>
-        <p class="muted">Set the amount you plan to spend this month. You can update it anytime.</p>
+        <p class="muted">Set your maximum limit and the amount you actually expect to spend. Update either anytime.</p>
       </div>
-      <form id="budgetForm" class="budget-form">
-        <div class="field">
-          <label for="budgetInput">Amount (₹)</label>
-          <input type="number" id="budgetInput" min="0" step="1" placeholder="e.g. 15000" required />
-        </div>
-        <button type="submit" class="btn btn-primary">Save Budget</button>
-      </form>
+      <div class="budget-forms">
+        <form id="budgetForm" class="budget-form">
+          <div class="field">
+            <label for="budgetInput">Monthly Budget (₹)</label>
+            <input type="number" id="budgetInput" min="0" step="1" placeholder="e.g. 5000" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Save Budget</button>
+        </form>
+
+        <form id="expectedForm" class="budget-form">
+          <div class="field">
+            <label for="expectedInput">Expected Expense (₹)</label>
+            <input type="number" id="expectedInput" min="0" step="1" placeholder="e.g. 4000" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Save Target</button>
+        </form>
+      </div>
     </section>
 
     <!-- ============================= -->
@@ -65,6 +75,7 @@
         <div class="stat-text">
           <span class="stat-label">Monthly Budget</span>
           <span class="stat-value" id="monthlyBudgetValue">₹0</span>
+          <span class="stat-footnote" id="expectedFootnote"></span>
         </div>
       </div>
 
@@ -98,8 +109,8 @@
 
     </section>
 
-    <!-- Status banner: shows "exceeded" or "saved" message -->
-    <div id="statusBanner" class="status-banner" hidden></div>
+    <!-- Status banners: one for the hard Budget, one for the Expected Expense target -->
+    <div id="statusMessages" class="status-stack"></div>
 
     <!-- ============================= -->
     <!-- SECTION 3: ADD EXPENSE FORM -->
@@ -154,9 +165,9 @@
         <p class="muted small" id="pieEmptyMsg">Add an expense to see the breakdown.</p>
       </div>
       <div class="card chart-card">
-        <h2>Daily Spending (This Month)</h2>
-        <canvas id="dailyBarChart" height="260"></canvas>
-        <p class="muted small" id="barEmptyMsg">Add an expense to see the trend.</p>
+        <h2>Daily Spending Trend</h2>
+        <canvas id="dailyTrendChart" height="260"></canvas>
+        <p class="muted small" id="lineEmptyMsg">Add an expense to see the trend.</p>
       </div>
     </section>
 
