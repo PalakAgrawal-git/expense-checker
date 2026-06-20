@@ -20,6 +20,7 @@
    - the list of expenses (an array of objects)    -> Expense Module
 --------------------------------------------------------- */
 const BUDGET_KEY = "expenseChecker_budget";
+const EXPECTED_KEY = "expenseChecker_expectedExpense";
 const EXPENSES_KEY = "expenseChecker_expenses";
 
 // --- Budget Module ---
@@ -32,6 +33,18 @@ function getBudget() {
 // Save the budget as plain text in Local Storage.
 function saveBudget(amount) {
   localStorage.setItem(BUDGET_KEY, String(amount));
+}
+
+// Expected Monthly Expense is a softer personal target that usually sits
+// BELOW the hard budget ceiling (e.g. budget ₹5000, expected ₹4000).
+// It gets its own warning/under-target message, separate from the budget one.
+function getExpectedExpense() {
+  const value = localStorage.getItem(EXPECTED_KEY);
+  return value ? Number(value) : 0;
+}
+
+function saveExpectedExpense(amount) {
+  localStorage.setItem(EXPECTED_KEY, String(amount));
 }
 
 // --- Expense Module ---
@@ -83,6 +96,10 @@ const todayLabel = document.getElementById("todayLabel");
 const budgetForm = document.getElementById("budgetForm");
 const budgetInput = document.getElementById("budgetInput");
 const monthlyBudgetValue = document.getElementById("monthlyBudgetValue");
+const expectedFootnote = document.getElementById("expectedFootnote");
+
+const expectedForm = document.getElementById("expectedForm");
+const expectedInput = document.getElementById("expectedInput");
 
 const totalSpentValue = document.getElementById("totalSpentValue");
 const remainingValue = document.getElementById("remainingValue");
@@ -92,7 +109,7 @@ const todayCountValue = document.getElementById("todayCountValue");
 const budgetRing = document.getElementById("budgetRing");
 const ringPercent = document.getElementById("ringPercent");
 
-const statusBanner = document.getElementById("statusBanner");
+const statusMessages = document.getElementById("statusMessages");
 
 const expenseForm = document.getElementById("expenseForm");
 const amountInput = document.getElementById("amountInput");
@@ -123,10 +140,20 @@ function renderClock() {
   autoTime.value = parts.time;
 }
 
+// Shows the currently saved budget/expected values in their input
+// fields, so reopening the page doesn't look like the settings were lost.
+function prefillSettingsInputs() {
+  const budget = getBudget();
+  const expectedExpense = getExpectedExpense();
+  budgetInput.value = budget > 0 ? budget : "";
+  expectedInput.value = expectedExpense > 0 ? expectedExpense : "";
+}
+
 // --- Analysis Module ---
-// Updates the 4 dashboard cards, the budget ring and the status banner.
+// Updates the 4 dashboard cards, the budget ring and the status banner(s).
 function renderDashboard() {
   const budget = getBudget();
+  const expectedExpense = getExpectedExpense();
   const expenses = getExpenses();
   const parts = getDateParts();
 
@@ -145,6 +172,7 @@ function renderDashboard() {
   remainingValue.textContent = formatCurrency(remaining);
   todaySpentValue.textContent = formatCurrency(todayTotal);
   todayCountValue.textContent = `${todayExpenses.length} expense${todayExpenses.length === 1 ? "" : "s"} today`;
+  expectedFootnote.textContent = expectedExpense > 0 ? `Target: ${formatCurrency(expectedExpense)}` : "";
 
   // Update the circular budget-used ring.
   const percentUsed = budget > 0 ? Math.min((totalSpent / budget) * 100, 100) : 0;
@@ -152,18 +180,37 @@ function renderDashboard() {
   ringPercent.textContent = budget > 0 ? `${Math.round((totalSpent / budget) * 100)}%` : "—";
   budgetRing.classList.toggle("over-budget", budget > 0 && totalSpent > budget);
 
-  // Update the warning / savings message banner.
-  if (budget <= 0) {
-    statusBanner.hidden = true;
-  } else if (totalSpent > budget) {
-    statusBanner.hidden = false;
-    statusBanner.className = "status-banner warning";
-    statusBanner.textContent = "⚠️ You have exceeded your monthly expense limit";
-  } else {
-    statusBanner.hidden = false;
-    statusBanner.className = "status-banner success";
-    statusBanner.textContent = `🎉 You saved ${formatCurrency(remaining)} this month`;
+  // Build the warning / savings messages. There can be up to two of these:
+  // one comparing spending against the hard Budget, and one comparing it
+  // against the softer Expected Expense target.
+  const messages = [];
+
+  if (budget > 0) {
+    if (totalSpent > budget) {
+      messages.push({ type: "warning", text: "⚠️ You have exceeded your monthly expense limit" });
+    } else {
+      messages.push({ type: "success", text: `🎉 You saved ${formatCurrency(remaining)} this month` });
+    }
   }
+
+  if (expectedExpense > 0) {
+    if (totalSpent > expectedExpense) {
+      messages.push({
+        type: "warning",
+        text: `⚠️ You have crossed your expected monthly expense of ${formatCurrency(expectedExpense)}`
+      });
+    } else {
+      const spare = expectedExpense - totalSpent;
+      messages.push({
+        type: "success",
+        text: `🎉 You're within your expected expense of ${formatCurrency(expectedExpense)} — ${formatCurrency(spare)} to spare`
+      });
+    }
+  }
+
+  statusMessages.innerHTML = messages
+    .map(m => `<div class="status-banner ${m.type}">${m.text}</div>`)
+    .join("");
 }
 
 // Rebuilds the expense history table from scratch.
@@ -201,7 +248,7 @@ function renderTable() {
    update them instead of recreating them every time.
 --------------------------------------------------------- */
 let pieChart = null;
-let barChart = null;
+let lineChart = null;
 
 const CATEGORY_COLORS = {
   Food: "#E07A5F",
@@ -213,7 +260,7 @@ const CATEGORY_COLORS = {
 
 function initCharts() {
   const pieCtx = document.getElementById("categoryPieChart");
-  const barCtx = document.getElementById("dailyBarChart");
+  const lineCtx = document.getElementById("dailyTrendChart");
 
   pieChart = new Chart(pieCtx, {
     type: "pie",
@@ -221,9 +268,21 @@ function initCharts() {
     options: { plugins: { legend: { position: "bottom" } } }
   });
 
-  barChart = new Chart(barCtx, {
-    type: "bar",
-    data: { labels: [], datasets: [{ label: "Spent", data: [], backgroundColor: "#0E7C61" }] },
+  lineChart = new Chart(lineCtx, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "Spent",
+        data: [],
+        borderColor: "#0E7C61",
+        backgroundColor: "rgba(14, 124, 97, 0.15)",
+        fill: true,
+        tension: 0.35,
+        pointBackgroundColor: "#0E7C61",
+        pointRadius: 4
+      }]
+    },
     options: {
       plugins: { legend: { display: false } },
       scales: { y: { beginAtZero: true } }
@@ -238,7 +297,7 @@ function renderCharts() {
   const monthExpenses = expenses.filter(e => e.month === parts.month && e.year === parts.year);
 
   const pieEmptyMsg = document.getElementById("pieEmptyMsg");
-  const barEmptyMsg = document.getElementById("barEmptyMsg");
+  const lineEmptyMsg = document.getElementById("lineEmptyMsg");
 
   // ---- Pie chart: total amount per category ----
   const categories = Object.keys(CATEGORY_COLORS);
@@ -254,7 +313,7 @@ function renderCharts() {
   document.getElementById("categoryPieChart").style.display = hasCategoryData ? "block" : "none";
   pieEmptyMsg.hidden = hasCategoryData;
 
-  // ---- Bar chart: total amount per day, in date order ----
+  // ---- Line chart: total amount per day, in date order ----
   const totalsByDate = {};
   monthExpenses.forEach(e => {
     totalsByDate[e.iso] = (totalsByDate[e.iso] || 0) + e.amount;
@@ -263,11 +322,11 @@ function renderCharts() {
   const dayLabels = sortedDates.map(iso => iso.slice(8, 10)); // just the day number
   const dayTotals = sortedDates.map(iso => totalsByDate[iso]);
 
-  barChart.data.labels = dayLabels;
-  barChart.data.datasets[0].data = dayTotals;
-  barChart.update();
-  document.getElementById("dailyBarChart").style.display = sortedDates.length ? "block" : "none";
-  barEmptyMsg.hidden = sortedDates.length > 0;
+  lineChart.data.labels = dayLabels;
+  lineChart.data.datasets[0].data = dayTotals;
+  lineChart.update();
+  document.getElementById("dailyTrendChart").style.display = sortedDates.length ? "block" : "none";
+  lineEmptyMsg.hidden = sortedDates.length > 0;
 }
 
 // Calls every render function — used after any data change.
@@ -287,7 +346,15 @@ budgetForm.addEventListener("submit", function (event) {
   const amount = Number(budgetInput.value);
   if (amount < 0) return;
   saveBudget(amount);
-  budgetInput.value = "";
+  renderAll();
+});
+
+// Saving the expected monthly expense (a softer target under the budget).
+expectedForm.addEventListener("submit", function (event) {
+  event.preventDefault();
+  const amount = Number(expectedInput.value);
+  if (amount < 0) return;
+  saveExpectedExpense(amount);
   renderAll();
 });
 
@@ -348,6 +415,7 @@ clearAllBtn.addEventListener("click", function () {
    Runs once when the page first loads.
 --------------------------------------------------------- */
 renderClock();
+prefillSettingsInputs();
 initCharts();
 renderAll();
 
