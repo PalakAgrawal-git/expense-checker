@@ -34,6 +34,11 @@
 
   --radius: 14px;
   --shadow: 0 2px 10px rgba(18, 42, 44, 0.06);
+  --shadow-lg: 0 16px 36px rgba(18, 42, 44, 0.12);
+
+  /* Gradients used for the header banner and primary buttons */
+  --gradient-brand: linear-gradient(135deg, #11926F 0%, #0A5C47 55%, #073D31 100%);
+  --gradient-gold: linear-gradient(135deg, #F1D78C 0%, #C99A3E 100%);
 }
 
 /* ---------------------------------------------------------
@@ -47,9 +52,18 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background: var(--bg);
   color: var(--ink);
   line-height: 1.5;
+
+  /* Soft gradient mesh: a few large, low-opacity color blobs sitting
+     on top of the base page color. Subtle on purpose so the white
+     cards still stand out clearly on top. */
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 8% 8%, rgba(14, 124, 97, 0.14), transparent 38%),
+    radial-gradient(circle at 92% 16%, rgba(201, 154, 62, 0.14), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(61, 135, 176, 0.10), transparent 45%);
+  background-attachment: fixed;
 }
 
 h1, h2 {
@@ -69,19 +83,48 @@ h2 {
    3. HEADER / TOPBAR
 --------------------------------------------------------- */
 .topbar {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: var(--gradient-brand);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Two soft blurred circles purely for visual depth — decorative only */
+.topbar::before,
+.topbar::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.topbar::before {
+  width: 260px;
+  height: 260px;
+  background: rgba(255, 255, 255, 0.10);
+  top: -120px;
+  left: -60px;
+}
+
+.topbar::after {
+  width: 220px;
+  height: 220px;
+  background: rgba(201, 154, 62, 0.25);
+  bottom: -130px;
+  right: 10%;
 }
 
 .topbar-inner {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 18px 24px;
+  padding: 28px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .brand {
@@ -97,27 +140,43 @@ h2 {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: var(--primary);
-  color: #fff;
+  background: #fff;
+  color: var(--primary-dark);
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
 
 .brand h1 {
   font-size: 1.25rem;
+  color: #fff;
 }
 
 .brand-sub {
   font-size: 0.8rem;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .topbar-date {
   font-size: 0.9rem;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.85);
   font-weight: 500;
+  position: relative;
+  z-index: 1;
 }
+
+/* Decorative finance illustration shown on the right of the header.
+   Hidden on smaller screens to keep the header compact (see media query). */
+.topbar-hero {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 220px;
+  max-width: 40vw;
+}
+
+.topbar-hero svg { display: block; width: 100%; height: auto; }
 
 /* ---------------------------------------------------------
    4. LAYOUT WRAPPER
@@ -213,17 +272,21 @@ input:disabled {
   border-radius: 10px;
   border: none;
   cursor: pointer;
-  transition: transform 0.06s ease, opacity 0.15s ease;
+  transition: transform 0.06s ease, opacity 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn:active { transform: scale(0.97); }
 
 .btn-primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: #fff;
+  box-shadow: 0 4px 12px rgba(14, 124, 97, 0.25);
 }
 
-.btn-primary:hover { background: var(--primary-dark); }
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(14, 124, 97, 0.32);
+}
 
 .btn-danger-outline {
   background: transparent;
@@ -259,6 +322,12 @@ input:disabled {
   display: flex;
   align-items: center;
   gap: 16px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
 }
 
 .stat-icon {
@@ -268,13 +337,15 @@ input:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
   background: var(--primary-light);
+  color: var(--primary);
   flex-shrink: 0;
 }
 
-.icon-remaining { background: var(--success-light); }
-.icon-today { background: #FBF3E1; }
+.stat-icon svg { width: 24px; height: 24px; }
+
+.icon-remaining { background: var(--success-light); color: var(--success); }
+.icon-today { background: #FBF3E1; color: var(--gold); }
 
 .stat-text {
   display: flex;
@@ -387,6 +458,23 @@ input:disabled {
   max-height: 260px;
 }
 
+/* Empty-state blocks: a quiet outline icon above the helper text,
+   shown instead of a chart/table row until real data exists. */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 28px 0;
+  text-align: center;
+}
+
+.empty-state svg {
+  width: 40px;
+  height: 40px;
+  color: var(--border);
+}
+
 /* ---------------------------------------------------------
    12. EXPENSE HISTORY TABLE
 --------------------------------------------------------- */
@@ -459,6 +547,9 @@ tbody tr:hover { background: var(--bg); }
   }
   .charts-grid {
     grid-template-columns: 1fr;
+  }
+  .topbar-hero {
+    display: none;
   }
 }
 
