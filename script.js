@@ -306,12 +306,18 @@ function renderCharts() {
   );
   const hasCategoryData = categoryTotals.some(value => value > 0);
 
+  // Show/hide the canvas FIRST. If we update the chart's data while the
+  // canvas is still hidden from a previous empty state, Chart.js draws
+  // onto a zero-size canvas and the chart stays blank until a manual
+  // refresh — resizing right after un-hiding avoids that.
+  document.getElementById("categoryPieChart").style.display = hasCategoryData ? "block" : "none";
+  pieEmptyMsg.hidden = hasCategoryData;
+  if (hasCategoryData) pieChart.resize();
+
   pieChart.data.labels = categories;
   pieChart.data.datasets[0].data = categoryTotals;
   pieChart.data.datasets[0].backgroundColor = categories.map(cat => CATEGORY_COLORS[cat]);
   pieChart.update();
-  document.getElementById("categoryPieChart").style.display = hasCategoryData ? "block" : "none";
-  pieEmptyMsg.hidden = hasCategoryData;
 
   // ---- Line chart: total amount per day, in date order ----
   const totalsByDate = {};
@@ -321,12 +327,15 @@ function renderCharts() {
   const sortedDates = Object.keys(totalsByDate).sort();
   const dayLabels = sortedDates.map(iso => iso.slice(8, 10)); // just the day number
   const dayTotals = sortedDates.map(iso => totalsByDate[iso]);
+  const hasLineData = sortedDates.length > 0;
+
+  document.getElementById("dailyTrendChart").style.display = hasLineData ? "block" : "none";
+  lineEmptyMsg.hidden = hasLineData;
+  if (hasLineData) lineChart.resize();
 
   lineChart.data.labels = dayLabels;
   lineChart.data.datasets[0].data = dayTotals;
   lineChart.update();
-  document.getElementById("dailyTrendChart").style.display = sortedDates.length ? "block" : "none";
-  lineEmptyMsg.hidden = sortedDates.length > 0;
 }
 
 // Calls every render function — used after any data change.
